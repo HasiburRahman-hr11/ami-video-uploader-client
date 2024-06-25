@@ -28,7 +28,7 @@ const SignIn = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext);
+  const { getUser } = useContext(AuthContext);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -48,7 +48,7 @@ const SignIn = () => {
           password,
         }
       );
-      if (res.status === 200) {
+      if (res.status === 409 || res.status === 401) {
         setError(res.data?.message || "Invalid Credentials!");
         setAlertPopup(true);
         setLoading(false);
@@ -60,7 +60,7 @@ const SignIn = () => {
         // Decode the token to get user information
         const decodedToken = jwtDecode(res.data.token);
         const userData = decodedToken;
-        setUser(userData);
+        await getUser(userData);
         setLoading(false);
 
         // Clear The Form.
@@ -69,7 +69,7 @@ const SignIn = () => {
         setPassword("");
 
         if (userData.email) {
-          navigate("/");
+          navigate("/dashboard");
         }
       }
     } catch (error) {

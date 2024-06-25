@@ -27,6 +27,7 @@ const UserInfo = () => {
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(false);
   const [alertPopup, setAlertPopup] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
   const [error, setError] = useState("");
@@ -110,6 +111,50 @@ const UserInfo = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const getUserFromDB = async () => {
+      setLoadingUser(true);
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BASE_API_URL}/user/${user._id}`
+        );
+        if (res.status === 200) {
+          const userData = {
+            _id: res.data._id,
+            firstName: res.data.firstName,
+            lastName: res.data.lastName,
+            email: res.data.email,
+            phone: res.data.phone,
+          };
+
+          if (res.data && res.data?.bio) {
+            userData.bio = res.data.bio;
+          }
+          // res.data.profilePicture
+
+          if (res.data && res.data?.profilePicture?.data) {
+            const base64String = arrayBufferToBase64(
+              res.data.profilePicture.data.data
+            );
+            const url = `data:${res.data.profilePicture.contentType};base64,${base64String}`;
+
+            userData.profilePicture = url;
+          }
+          console.log("UserData from App --", userData);
+
+          setUser(userData);
+          setLoadingUser(false);
+        }
+      } catch (error) {
+        console.log(error);
+        setLoadingUser(false);
+      }
+    };
+    if (user && user?._id) {
+      getUserFromDB();
+    }
+  }, []);
 
   return (
     <Box
@@ -293,7 +338,7 @@ const UserInfo = () => {
             position: "relative",
           }}
         >
-          {user?.profilePicture ? (
+          {!loadingUser && user?.profilePicture ? (
             <Box
               sx={{
                 width: "90px",
