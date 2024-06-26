@@ -151,7 +151,7 @@ const UserInfo = () => {
     <Box
       component="div"
       sx={{
-        maxWidth: "800px",
+        maxWidth: "600px",
         margin: "0 auto",
         padding: "50px 0",
         width: "max-content",
@@ -362,6 +362,9 @@ const UserInfo = () => {
         sx={{
           display: "flex",
           alignItems: "center",
+          justifyContent:"center",
+          width: "max-content",
+          margin:"0 auto"
         }}
       >
         <Box

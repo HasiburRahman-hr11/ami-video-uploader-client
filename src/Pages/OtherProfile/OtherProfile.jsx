@@ -43,7 +43,7 @@ const OtherProfile = () => {
   return (
     <main>
       <Navigation />
-      <Box component="section" sx={{minHeight:"300px"}}>
+      <Box component="section" sx={{ minHeight: "300px" }}>
         {loadingUser ? (
           <Box
             sx={{
@@ -87,6 +87,9 @@ const OtherProfile = () => {
                   sx={{
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: "center",
+                    width: "max-content",
+                    margin: "0 auto",
                   }}
                 >
                   <Box
