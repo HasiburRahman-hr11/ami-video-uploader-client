@@ -9,19 +9,19 @@ import {
   TextField,
   Button,
   Grid,
-  Alert,
   CircularProgress,
 } from "@mui/material";
 import { AuthContext } from "../../Context/AuthContext";
 import EditIcon from "@mui/icons-material/Edit";
 import axios from "axios";
 import arrayBufferToBase64 from "../../utils/arrayBufferToBase64";
+import CloseIcon from "@mui/icons-material/Close";
+import { useParams } from "react-router-dom";
 
 const UserInfo = () => {
   const { user, setUser } = useContext(AuthContext);
-  const [openModal, setOpenModal] = useState(false);
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const [openEditProfileModal, setOpenEditProfileModal] = useState(false);
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -31,11 +31,40 @@ const UserInfo = () => {
   const [alertPopup, setAlertPopup] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
   const [error, setError] = useState("");
+  const [profilePictureError, setProfilePictureError] = useState("");
 
   const [profilePicture, setProfilePicture] = useState(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState();
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
+
+  const handleOpenModal = () => {
+    setOpenEditProfileModal(true);
+  };
+  const handleCloseModal = () => {
+    setOpenEditProfileModal(false);
+    if (user?.profilePicture) {
+      setProfilePicturePreview(user.profilePicture);
+    } else {
+      setProfilePicturePreview(null);
+    }
+  };
+
+  // Define the maximum file size in bytes (500KB = 500 * 1024 bytes)
+  const MAX_SIZE = 500 * 1024;
+
+  // Allowed image MIME types
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
   const handleProfilePictureChange = (e) => {
+    if (e.target.files[0].size > MAX_SIZE) {
+      setProfilePictureError("Profile Picture size must be less than 500KB!");
+      return;
+    }
+    if (!allowedTypes.includes(e.target.files[0].type)) {
+      setProfilePictureError(
+        "Profile Picture must be an image (JPEG,PNG,GIF,WEBP)."
+      );
+      return;
+    }
     setProfilePicturePreview(URL.createObjectURL(e.target.files[0]));
     setProfilePicture(e.target.files[0]);
   };
@@ -56,11 +85,13 @@ const UserInfo = () => {
 
   const handleUpdateProfile = async (event) => {
     event.preventDefault();
+    setProfilePictureError("");
     if (!firstName || !lastName || !phone) {
       setError("Please fill the form correctly!");
       setAlertPopup(true);
       return;
     }
+
     setLoading(true);
 
     const formData = new FormData();
@@ -68,7 +99,10 @@ const UserInfo = () => {
     formData.append("lastName", lastName);
     formData.append("phone", phone);
     formData.append("bio", bio);
-    formData.append("profilePicture", profilePicture);
+
+    if (profilePicture) {
+      formData.append("profilePicture", profilePicture);
+    }
 
     try {
       const res = await axios.post(
@@ -105,56 +139,13 @@ const UserInfo = () => {
         setAlertPopup(true);
         setLoading(false);
         handleCloseModal();
+        setResponseMessage("");
       }
     } catch (error) {
       console.log(error);
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const getUserFromDB = async () => {
-      setLoadingUser(true);
-      try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_BASE_API_URL}/user/${user._id}`
-        );
-        if (res.status === 200) {
-          const userData = {
-            _id: res.data._id,
-            firstName: res.data.firstName,
-            lastName: res.data.lastName,
-            email: res.data.email,
-            phone: res.data.phone,
-          };
-
-          if (res.data && res.data?.bio) {
-            userData.bio = res.data.bio;
-          }
-          // res.data.profilePicture
-
-          if (res.data && res.data?.profilePicture?.data) {
-            const base64String = arrayBufferToBase64(
-              res.data.profilePicture.data.data
-            );
-            const url = `data:${res.data.profilePicture.contentType};base64,${base64String}`;
-
-            userData.profilePicture = url;
-          }
-          console.log("UserData from App --", userData);
-
-          setUser(userData);
-          setLoadingUser(false);
-        }
-      } catch (error) {
-        console.log(error);
-        setLoadingUser(false);
-      }
-    };
-    if (user && user?._id) {
-      getUserFromDB();
-    }
-  }, []);
 
   return (
     <Box
@@ -167,9 +158,9 @@ const UserInfo = () => {
       }}
     >
       <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        open={openModal}
+        aria-labelledby="edit-profile-modal-title"
+        aria-describedby="edit-profile-modal-description"
+        open={openEditProfileModal}
         onClose={handleCloseModal}
         closeAfterTransition
         slots={{ backdrop: Backdrop }}
@@ -179,10 +170,22 @@ const UserInfo = () => {
           },
         }}
       >
-        <Fade in={openModal}>
-          <Box sx={modalContent}>
+        <Fade in={openEditProfileModal}>
+          <Box sx={styles.modalContent}>
+            <Box
+              onClick={handleCloseModal}
+              sx={{
+                position: "absolute",
+                top: "20px",
+                right: "20px",
+                width: "max-content",
+                cursor: "pointer",
+              }}
+            >
+              <CloseIcon />
+            </Box>
             <Typography
-              id="transition-modal-title"
+              id="edit-profile-modal-title"
               variant="h4"
               component="h4"
               sx={{
@@ -222,6 +225,24 @@ const UserInfo = () => {
                     zIndex: 10,
                   }}
                 />
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    cursor: "pointer",
+                    left: "0",
+                    top: "0",
+                    background: "rgba(0,0,0,0.2)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: "50%",
+                    zIndex: 5,
+                  }}
+                >
+                  <EditIcon sx={{ color: "#fff" }} />
+                </Box>
                 {profilePicturePreview && (
                   <Avatar
                     alt="Cindy Baker"
@@ -243,6 +264,17 @@ const UserInfo = () => {
                   </Avatar>
                 )}
               </Box>
+              {profilePictureError && (
+                <Typography
+                  sx={{
+                    textAlign: "center",
+                    color: "red",
+                    marginTop: "20px",
+                  }}
+                >
+                  {profilePictureError}
+                </Typography>
+              )}
 
               <Grid container spacing={2} sx={{ mt: "20px" }}>
                 <Grid item md={6} sm={12}>
@@ -324,6 +356,7 @@ const UserInfo = () => {
           </Box>
         </Fade>
       </Modal>
+
       <Box
         component="div"
         sx={{
@@ -428,15 +461,17 @@ const UserInfo = () => {
 
 export default UserInfo;
 
-const modalContent = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "100%",
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-  maxWidth: "700px",
+const styles = {
+  modalContent: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "100%",
+    bgcolor: "background.paper",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
+    maxWidth: "700px",
+  },
 };

@@ -1,15 +1,9 @@
-import React from "react";
-
-import UserInfo from "../../Components/Dashboard/UserInfo";
-import VideosWrapper from "../../Components/Dashboard/VideosWrapper";
+import React from 'react'
 
 const Dashboard = () => {
   return (
-    <main>
-      <UserInfo />
-      <VideosWrapper />
-    </main>
-  );
-};
+    <div>Dashboard</div>
+  )
+}
 
-export default Dashboard;
+export default Dashboard

@@ -16,6 +16,7 @@ import axios from "axios";
 import { Alert, CircularProgress } from "@mui/material";
 import { AuthContext } from "../../Context/AuthContext";
 import { jwtDecode } from "jwt-decode";
+import arrayBufferToBase64 from "../../utils/arrayBufferToBase64";
 
 const defaultTheme = createTheme();
 
@@ -28,7 +29,7 @@ const SignIn = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { getUser } = useContext(AuthContext);
+  const { setUser } = useContext(AuthContext);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -53,25 +54,34 @@ const SignIn = () => {
         setAlertPopup(true);
         setLoading(false);
       }
+      console.log(res.data)
       if (res.data.token) {
+        localStorage.setItem("amivid-token", res.data.token);
+      }
+      if (res.data && res.data?.user) {
+        let userData = res.data.user;
+        if (res.data?.user?.profilePicture?.data) {
+          const base64String = arrayBufferToBase64(
+            res.data.user.profilePicture.data.data
+          );
+          const url = `data:${res.data.user?.profilePicture.contentType};base64,${base64String}`;
+
+          userData.profilePicture = url;
+        }else{
+          userData.profilePicture = ""
+        }
         setResponseMessage("Logged in successfully.");
         setAlertPopup(true);
-        localStorage.setItem("amivid-token", res.data.token);
-        // Decode the token to get user information
-        const decodedToken = jwtDecode(res.data.token);
-        const userData = decodedToken;
-        await getUser(userData);
-        setLoading(false);
-
+        setUser(userData);
         // Clear The Form.
         setError("");
         setEmail("");
         setPassword("");
-
-        if (userData.email) {
-          navigate("/dashboard");
+        if (userData._id) {
+          navigate(`/profile/${userData._id}`);
         }
       }
+      setLoading(false);
     } catch (error) {
       setError("Something went wrong!");
       setAlertPopup(true);
@@ -175,7 +185,17 @@ const SignIn = () => {
                   sx={{ mt: 3, mb: 2, py: "10px" }}
                   disabled={loading}
                 >
-                  {loading ? <CircularProgress sx={{color:"#fff", width:"24px !important", height:"24px !important"}} /> : 'Sign In'}
+                  {loading ? (
+                    <CircularProgress
+                      sx={{
+                        color: "#fff",
+                        width: "24px !important",
+                        height: "24px !important",
+                      }}
+                    />
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
                 <Box>
                   <Box component="p" sx={{ textAlign: "center" }}>

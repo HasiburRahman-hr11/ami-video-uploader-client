@@ -66,7 +66,7 @@ const SignUp = () => {
         setLastName("");
         setEmail("");
         setPhone("");
-        navigate("/sign-in");
+        navigate("/pre-login");
       }
     } catch (error) {
       setError("Something went wrong!");

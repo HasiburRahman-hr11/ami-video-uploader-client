@@ -14,7 +14,7 @@ const useAuth = () => {
   const [user, setUser] = useState(userData);
   const [loadingUser, setLoadingUser] = useState(false);
 
-  const handleLogout = () => {
+  const logout = () => {
     localStorage.removeItem("amivid-token");
     setUser({});
   };
@@ -60,9 +60,9 @@ const useAuth = () => {
   return {
     user,
     setUser,
-    handleLogout,
+    logout,
     getUser,
-    loadingUser
+    loadingUser,
   };
 };
 

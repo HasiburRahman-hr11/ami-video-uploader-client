@@ -4,11 +4,14 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import AuthContextProvider from "./Context/AuthContext";
+import { VideoProvider } from "./Context/VideoContext";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <AuthContextProvider>
-      <App />
+      <VideoProvider>
+        <App />
+      </VideoProvider>
     </AuthContextProvider>
   </React.StrictMode>
 );
