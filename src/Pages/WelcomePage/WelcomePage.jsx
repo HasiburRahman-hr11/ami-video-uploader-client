@@ -26,7 +26,8 @@ const WelcomePage = () => {
           <Typography sx={{
             mb:"20px"
           }}>
-            Please check your inbox. We sent an email with a Login Password.
+            Please check your inbox. We sent an email with a Login Password. <br />
+            Do not forget to check Spam Folder if no mail found in Inbox.
           </Typography>
           <Link to="/sign-in">
             <Button variant="contained">Let's Login</Button>
